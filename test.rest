@@ -1,0 +1,17 @@
+###
+POST http://localhost:1010/login
+Content-Type:application/json
+
+{
+    "email":"admin@inkbytm.com",
+    "password":"Tumelo2005"
+}
+
+###
+POST http://localhost:1010/register
+Content-Type:application/json
+
+{
+    "email":"admin@inkbytm.com",
+    "password":"Tumelo2005"
+}
