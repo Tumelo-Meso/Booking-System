@@ -21,7 +21,7 @@ function Footer() {
       <div className="footer-container">
         <div className="footer-grid">
           <div className="footer-section">
-            <h3 className="footer-logo">INK BY NALA</h3>
+            <h3 className="footer-logo">Pure Ink Co.  </h3>
             <p>Creating timeless masterpieces that tell your unique story through art and passion.</p>
             <div className="social-links">
               <a href="#" ><FaInstagram /></a>
@@ -44,7 +44,7 @@ function Footer() {
             <h4>Contact Info</h4>
             <ul className="contact-info">
               <li><FaMapMarkerAlt /> 1025 Richard St, Hatfield, Pretoria, 0883</li>
-              <li><FaEnvelope /> hello@inkbytm.com</li>
+              <li><FaEnvelope /> hello@pureink.com</li>
               <li><FaPhone /> +27 15 654 8889</li>
             </ul>
           </div>
@@ -71,7 +71,7 @@ function Footer() {
               allowFullScreen
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
-              title="Ink By Nala Location - 1090 Burnett St, Hatfield, Pretoria"
+              title="IPure Ink Co.   Location - 1090 Burnett St, Hatfield, Pretoria"
             ></iframe>
           </div>
           <div className="map-links">
@@ -95,7 +95,7 @@ function Footer() {
         </div>
         
         <div className="footer-bottom">
-          <p>© {year} Ink By TM Tattoos. All rights reserved.</p>
+          <p>© {year} Pure Ink Co Tattoos. All rights reserved.</p>
           <button className="scroll-top" onClick={scrollToTop}>
             <FaArrowUp />
           </button>

@@ -37,7 +37,7 @@ function AdminDashboard() {
   // Sample booking data (In production, fetch from backend)
   useEffect(() => {
     // Check if admin is logged in
-    const isAdmin = sessionStorage.getItem("adminAuth") || localStorage.getItem("adminSession");
+    const isAdmin = JSON.parse(localStorage.getItem("token"))
     if (!isAdmin) {
       navigate("/admin/login");
       return;
@@ -122,7 +122,7 @@ function AdminDashboard() {
   }, [searchTerm, statusFilter, bookings]);
 
   const handleLogout = () => {
-    localStorage.removeItem("adminSession");
+    localStorage.removeItem("token");
     sessionStorage.removeItem("adminAuth");
     sessionStorage.removeItem("adminData");
     navigate("/admin/login");
@@ -362,13 +362,13 @@ function AdminDashboard() {
       <nav className="admin-navbar">
         <div className="nav-brand">
           <FaTachometerAlt />
-          <h2>Ink By Nala - Admin Panel</h2>
+          <h2>Pure Ink Co.   |   Admin Panel</h2>
         </div>
         
         <div className="nav-user">
           <FaUserCircle className="user-icon" />
           <div className="user-info">
-            <span>{adminData?.email || "admin@inkbynala.com"}</span>
+            <span>{adminData?.email || "admin@pureink.com"}</span>
             <small>Administrator</small>
           </div>
           <button className="logout-btn" onClick={handleLogout}>

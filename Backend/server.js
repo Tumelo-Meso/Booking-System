@@ -2,9 +2,18 @@ import express from "express"
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
 import pool from "./sql.js";
+import multer from "multer";
+import cors from "cors";
 import cloudinary , {uploadImage} from "./cloudnary.js"
 const app = express();
-const PORT = 1010
+const PORT =1010
+
+
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true
+}));
+app.options("*", cors());
 
 app.use(express.json())
 
@@ -12,6 +21,7 @@ app.post("/login", async(req,res)=>{
 
     const {email,password} = req.body;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
     if(!emailRegex.test(email) || !password){
         return res.status(401).json({message:"Invalid Request"})
     }
@@ -36,7 +46,6 @@ app.post("/login", async(req,res)=>{
         return res.status(200).json({token})
 
 
-
     } catch (error) {
         
         console.log(error)
@@ -49,7 +58,7 @@ app.post("/login", async(req,res)=>{
 const upload = multer({ dest: 'uploads/' }); 
 
 
-router.post('/bookings', upload.array('images', 5), async (req, res) => {
+app.post('/bookings', upload.array('images', 5), async (req, res) => {
 
         const {
            firstName,lastName,emailAddress,phoneNumber,preferredDate,alternativeDate,preferredTime,serviceType,tattoSize,tattoPlacement,tattoDescription,additonalNotes,images
@@ -110,6 +119,10 @@ router.post('/bookings', upload.array('images', 5), async (req, res) => {
     }
     }
 });
+
+
+
+
 
 
 /*

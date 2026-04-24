@@ -24,7 +24,7 @@ function About() {
           <span className="section-tag">About Us</span>
           <h2>Where Art Meets <span className="gradient-text">Skin</span></h2>
           <p className="section-subtitle">
-            Ink By Nala is more than just a tattoo studio — it's a creative sanctuary 
+            Pure Ink Co is more than just a tattoo studio — it's a creative sanctuary 
             where your ideas become permanent masterpieces.
           </p>
         </motion.div>
@@ -38,7 +38,7 @@ function About() {
             viewport={{ once: true }}
           >
             <p>
-              Founded with a passion for artistic expression, Ink By TM has grown into 
+              Founded with a passion for artistic expression, Pure Ink Co has grown into 
               Pretoria's premier destination for custom tattoos. We specialize in fine line, 
               realism, and bespoke designs that tell your unique story.
             </p>

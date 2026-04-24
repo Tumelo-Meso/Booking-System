@@ -13,36 +13,34 @@ import {
   FaKey
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 function AdminLogin() {
+
+
+
+
+
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    email: "",
-    password: ""
-  });
+
+  const [email , setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
-
-  // Demo credentials (In production, this should be validated on backend)
-  const ADMIN_CREDENTIALS = {
-    email: "admin@inkbynala.com",
-    password: "admin123"
-  };
-
+  const [data , setData] = useState("");
   const validateForm = () => {
     const newErrors = {};
     
-    if (!formData.email) {
+    if (!email) {
       newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
       newErrors.email = "Please enter a valid email";
     }
     
-    if (!formData.password) {
+    if (!password) {
       newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
+    } else if (password.length < 6) {
       newErrors.password = "Password must be at least 6 characters";
     }
     
@@ -50,21 +48,53 @@ function AdminLogin() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
-    if (errors[name]) {
-      setErrors({ ...errors, [name]: "" });
-    }
-  };
+
+  async function autheticateLogin(){
+
+
+
+      try {
+        
+        if(!email || !password){
+           return
+        }
+
+        const response = await fetch("http://localhost:1010/login",{
+            method:"POST",
+            headers:{
+              "Content-Type":"application/json"
+            },
+            body : JSON.stringify({
+              email,password
+            })
+        })
+
+        const returnValue = await response.json();
+
+        if(!response.ok) {
+          return  setData(returnValue.message)
+        }
+
+        const token = returnValue.token;
+
+        localStorage.setItem("token",JSON.stringify(token));
+
+        navigate("/admin/dashboard")
+        
+      } catch (error) {
+
+         console.error(error)
+      }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-   
+    validateForm();
+  
+    autheticateLogin()
+ 
+    
   };
 
   const handleBackToHome = () => {
@@ -101,8 +131,11 @@ function AdminLogin() {
               <input
                 type="email"
                 name="email"
-                value={formData.email}
-                onChange={handleChange}
+                value={email}
+                onChange={(event)=>{
+
+                  setEmail(event.target.value)
+                }}
                 placeholder="Enter your email"
                 autoComplete="off"
               />
@@ -118,8 +151,11 @@ function AdminLogin() {
                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
-                  value={formData.password}
-                  onChange={handleChange}
+                  value={password}
+                  onChange={(event)=>{
+
+                      setPassword(event.target.value);
+                  }}
                   placeholder="Enter your password"
                 />
                 <button
@@ -137,12 +173,11 @@ function AdminLogin() {
               <label className="remember-me">
                 <input
                   type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
+                  
                 />
                 <span>Remember me</span>
               </label>
-              <a href="#" className="forgot-password">Forgot Password?</a>
+             
             </div>
 
             {errors.submit && (

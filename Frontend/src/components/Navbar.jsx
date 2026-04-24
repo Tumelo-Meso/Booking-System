@@ -45,7 +45,7 @@ function Navbar() {
         onClick={handleLogoClick}
         style={{ cursor: "pointer" }}
       >
-        INK BY TM
+        Pure Ink Co.  
       </motion.h2>
 
       <div className={`nav-links ${isOpen ? "active" : ""}`}>
