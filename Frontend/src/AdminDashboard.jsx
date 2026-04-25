@@ -82,14 +82,15 @@ function AdminDashboard() {
     let filtered = bookings;
     
     if (statusFilter !== "all") {
-      filtered = filtered.filter(booking => booking.status === statusFilter);
+      filtered = filtered.filter(booking => booking.bookingInfo.status === statusFilter);
     }
     
     if (searchTerm) {
       filtered = filtered.filter(booking => 
-        booking.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.id.toLowerCase().includes(searchTerm.toLowerCase())
+        booking.bookingInfo.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||   
+        booking.bookingInfo.lastName.toLowerCase().includes(searchTerm.toLowerCase())||
+        booking.bookingInfo.emailAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        booking.bookingInfo.id.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     
@@ -118,29 +119,39 @@ function AdminDashboard() {
       setBookings(prev => prev.filter(booking => booking.id !== bookingId));
       setShowModal(false);
     }
-  };
+  };  
 
   const getStatusBadge = (status) => {
     switch(status) {
-      case "pending":
+      case "Pending":
         return <span className="status-badge pending"><FaSpinner /> Pending</span>;
-      case "confirmed":
+      case "Confirmed":
         return <span className="status-badge confirmed"><FaCheckCircle /> Confirmed</span>;
-      case "completed":
+      case "Completed":
         return <span className="status-badge completed"><FaCheckCircle /> Completed</span>;
-      case "cancelled":
+      case "Cancelled":
         return <span className="status-badge cancelled"><FaTimesCircle /> Cancelled</span>;
       default:
         return <span className="status-badge pending">Unknown</span>;
     }
   };
 
-  const stats = {
-    totalBookings: bookings.length,
-    pendingBookings: bookings.filter(b => b.status === "Pending").length,
-    confirmedBookings: bookings.filter(b => b.status === "Confirmed").length,
-    completedBookings: bookings.filter(b => b.status === "Completed").length
-  };
+  
+    const stats = {
+      totalBookings: bookings.length,
+
+      pendingBookings: bookings.filter(
+        b => b.bookingInfo?.status === "Pending"
+      ).length,
+
+      confirmedBookings: bookings.filter(
+        b => b.bookingInfo?.status === "Confirmed"
+      ).length,
+
+      completedBookings: bookings.filter(
+        b => b.bookingInfo?.status === "Completed"
+      ).length
+    };
 
   const renderOverview = () => (
     <motion.div
@@ -206,12 +217,12 @@ function AdminDashboard() {
             </thead>
             <tbody>
               {filteredBookings.slice(0, 5).map(booking => (
-                <tr key={booking.id}>
-                  <td>{booking.id}</td>
-                  <td>{booking.customerName}</td>
-                  <td>{booking.service}</td>
-                  <td>{booking.preferredDate}</td>
-                  <td>{getStatusBadge(booking.status)}</td>
+                <tr key={booking.bookingInfo.id}>
+                  <td>{booking.bookingInfo.id}</td>
+                  <td>{booking.bookingInfo.firstName}  { booking.bookingInfo.lastName}</td>
+                  <td>{booking.bookingInfo.serviceType}</td>
+                  <td>{booking.bookingInfo.preferredDate}</td>
+                  <td>{getStatusBadge(booking.bookingInfo.status)}</td>
                   <td>
                     <button 
                       className="action-btn view-btn"
@@ -256,10 +267,10 @@ function AdminDashboard() {
             onChange={(e) => setStatusFilter(e.target.value)}
           >
             <option value="all">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
+            <option value="Pending">Pending</option>
+            <option value="Confirmed">Confirmed</option>
+            <option value="Completed">Completed</option>
+            <option value="Cancelled">Cancelled</option>
           </select>
           <button className="export-btn">
             <FaDownload /> Export
@@ -284,26 +295,26 @@ function AdminDashboard() {
           </thead>
           <tbody>
             {filteredBookings.map(booking => (
-              <tr key={booking.id}>
-                <td>{booking.id}</td>
-                <td>{booking.customerName}</td>
+              <tr key={booking.bookingInfo.id}>
+                <td>{booking.bookingInfo.id}</td>
+                <td>{booking.bookingInfo.firstName}  {booking.bookingInfo.lastName}</td>
                 <td>
                   <div className="contact-info-cell">
-                    <small>{booking.email}</small>
-                    <small>{booking.phone}</small>
+                    <small>{booking.bookingInfo.emailAddress}</small>
+                    <small>{booking.bookingInfo.phoneNumber}</small>
                   </div>
                 </td>
-                <td>{booking.service}</td>
-                <td>{booking.size}</td>
-                <td>{booking.placement}</td>
+                <td>{booking.bookingInfo.serviceType}</td>
+                <td>{booking.bookingInfo.tattoSize}</td>
+                <td>{booking.bookingInfo.tattoPlacement}</td>
                 <td>
                   <div>
-                    {booking.preferredDate}
+                    {booking.bookingInfo.preferredDate}
                     <br />
-                    <small>{booking.preferredTime}</small>
+                    <small>{booking.bookingInfo.preferredTime}</small>
                   </div>
                 </td>
-                <td>{getStatusBadge(booking.status)}</td>
+                <td>{getStatusBadge(booking.bookingInfo.status)}</td>
                 <td>
                   <div className="action-buttons">
                     <button 
@@ -317,7 +328,7 @@ function AdminDashboard() {
                     </button>
                     <button 
                       className="action-btn delete-btn"
-                      onClick={() => handleDeleteBooking(booking.id)}
+                      onClick={() => handleDeleteBooking(booking.bookingInfo.id)}
                     >
                       <FaTrash />
                     </button>
@@ -394,50 +405,50 @@ function AdminDashboard() {
               <div className="modal-details">
                 <div className="detail-row">
                   <strong>Booking ID:</strong>
-                  <span>{selectedBooking.id}</span>
+                  <span>{selectedBooking.bookingInfo.id}</span>
                 </div>
                 <div className="detail-row">
                   <strong>Customer Name:</strong>
-                  <span>{selectedBooking.customerName}</span>
+                  <span>{selectedBooking.bookingInfo.firstName} {selectedBooking.bookingInfo.lastName}</span>
                 </div>
                 <div className="detail-row">
                   <strong>Email:</strong>
-                  <span>{selectedBooking.email}</span>
+                  <span>{selectedBooking.bookingInfo.emailAddress}</span>
                 </div>
                 <div className="detail-row">
                   <strong>Phone:</strong>
-                  <span>{selectedBooking.phone}</span>
+                  <span>{selectedBooking.bookingInfo.phoneNumber}</span>
                 </div>
                 <div className="detail-row">
                   <strong>Service:</strong>
-                  <span>{selectedBooking.service}</span>
+                  <span>{selectedBooking.bookingInfo.serviceType}</span>
                 </div>
                 <div className="detail-row">
                   <strong>Size:</strong>
-                  <span>{selectedBooking.size}</span>
+                  <span>{selectedBooking.bookingInfo.tattoSize}</span>
                 </div>
                 <div className="detail-row">
                   <strong>Placement:</strong>
-                  <span>{selectedBooking.placement}</span>
+                  <span>{selectedBooking.bookingInfo.tattoPlacement}</span>
                 </div>
                 <div className="detail-row">
                   <strong>Description:</strong>
-                  <span>{selectedBooking.description}</span>
+                  <span>{selectedBooking.bookingInfo.tattoDescription}</span>
                 </div>
                 <div className="detail-row">
                   <strong>Preferred Date:</strong>
-                  <span>{selectedBooking.preferredDate} at {selectedBooking.preferredTime}</span>
+                  <span>{selectedBooking.bookingInfo.preferredDate} at {selectedBooking.bookingInfo.preferredTime}</span>
                 </div>
                 <div className="detail-row">
                   <strong>Status:</strong>
-                  <span>{getStatusBadge(selectedBooking.status)}</span>
+                  <span>{getStatusBadge(selectedBooking.bookingInfo.status)}</span>
                 </div>
               </div>
 
               <div className="modal-actions">
                 <select 
-                  onChange={(e) => handleUpdateStatus(selectedBooking.id, e.target.value)}
-                  defaultValue={selectedBooking.status}
+                  onChange={(e) => handleUpdateStatus(selectedBooking.bookingInfo.id, e.target.value)}
+                  defaultValue={selectedBooking.bookingInfo.status}
                 >
                   <option value="pending">Pending</option>
                   <option value="confirmed">Confirmed</option>

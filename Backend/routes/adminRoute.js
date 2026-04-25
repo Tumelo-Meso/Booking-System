@@ -13,7 +13,7 @@ router.get("/getBookings",async (req,res)=>{
         
         const [row] = await pool.query("SELECT * FROM bookings");
 
-
+        
         if(row.length==0){
             return res.status(400).json({message:"No bookings found"})
         }
@@ -21,9 +21,9 @@ router.get("/getBookings",async (req,res)=>{
         let bookings = [];
         for(let i = 0; i <row.length ;i++){ 
 
-            const [row2] = await pool.query('SELECT imageUrl FROM images WHERE bookingid =?',[row[0][i].id]);
+            const [row2] = await pool.query('SELECT imageUrl FROM images WHERE bookingid =?',[row[i].id]);
 
-            const bookingInfo = row[0][i];
+            const bookingInfo = row[i];
             let booking = {
                 bookingInfo,row2
             }
@@ -32,7 +32,7 @@ router.get("/getBookings",async (req,res)=>{
         }
 
 
-        return res.status(200).json({bookings})
+        return res.status(200).json(bookings)
 
     } catch (error) {
         
