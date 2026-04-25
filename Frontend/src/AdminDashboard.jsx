@@ -43,65 +43,40 @@ function AdminDashboard() {
       return;
     }
 
-    // Load admin data
-    const storedAdmin = localStorage.getItem("adminSession") || sessionStorage.getItem("adminData");
-    if (storedAdmin) {
-      setAdminData(JSON.parse(storedAdmin));
-    }
 
-    // Sample bookings data
-    const sampleBookings = [
-      {
-        id: "BK001",
-        customerName: "John Doe",
-        email: "john@example.com",
-        phone: "+27 123 456 789",
-        service: "Custom Tattoo",
-        size: "Medium (4-6 inches)",
-        placement: "Arm",
-        description: "Geometric lion design with mandala elements",
-        preferredDate: "2024-03-20",
-        preferredTime: "2:00 PM",
-        status: "pending",
-        createdAt: "2024-03-15T10:30:00",
-        referenceImages: []
-      },
-      {
-        id: "BK002",
-        customerName: "Jane Smith",
-        email: "jane@example.com",
-        phone: "+27 987 654 321",
-        service: "Fine Line",
-        size: "Small (2-3 inches)",
-        placement: "Wrist",
-        description: "Minimalist moon phase tattoo",
-        preferredDate: "2024-03-22",
-        preferredTime: "11:00 AM",
-        status: "confirmed",
-        createdAt: "2024-03-16T14:15:00",
-        referenceImages: []
-      },
-      {
-        id: "BK003",
-        customerName: "Mike Johnson",
-        email: "mike@example.com",
-        phone: "+27 456 789 123",
-        service: "Realism",
-        size: "Large (7-10 inches)",
-        placement: "Chest",
-        description: "Realistic portrait of a wolf",
-        preferredDate: "2024-03-25",
-        preferredTime: "3:00 PM",
-        status: "completed",
-        createdAt: "2024-03-10T09:45:00",
-        referenceImages: []
-      }
-    ];
-
-    setBookings(sampleBookings);
-    setFilteredBookings(sampleBookings);
+     getBookings()
   }, [navigate]);
 
+
+  async function getBookings() {
+    
+    let token = JSON.parse(localStorage.getItem("token"))||[];
+
+    if(!token) navigate("/admin/login")
+
+    try {
+      const response = await fetch("http://localhost:1010/admin/getBookings",{
+          method:"GET",
+          headers:{
+            "Authorization":token
+          }
+      });
+
+      const data = await response.json();
+
+      if(!response.ok){
+        setBookings("")
+        setFilteredBookings("");
+
+        return
+      }
+      setBookings(data);
+      setFilteredBookings(data); 
+    } catch (error) {
+        console.error(error)      
+    }
+
+  }
   // Filter bookings based on search and status
   useEffect(() => {
     let filtered = bookings;
@@ -123,8 +98,7 @@ function AdminDashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    sessionStorage.removeItem("adminAuth");
-    sessionStorage.removeItem("adminData");
+   
     navigate("/admin/login");
   };
 
@@ -163,9 +137,9 @@ function AdminDashboard() {
 
   const stats = {
     totalBookings: bookings.length,
-    pendingBookings: bookings.filter(b => b.status === "pending").length,
-    confirmedBookings: bookings.filter(b => b.status === "confirmed").length,
-    completedBookings: bookings.filter(b => b.status === "completed").length
+    pendingBookings: bookings.filter(b => b.status === "Pending").length,
+    confirmedBookings: bookings.filter(b => b.status === "Confirmed").length,
+    completedBookings: bookings.filter(b => b.status === "Completed").length
   };
 
   const renderOverview = () => (

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef,useEffect } from "react";
 import "./css/BookingPage.css";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -24,13 +24,14 @@ function BookingPage() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const [currentStep, setCurrentStep] = useState(1);
+  const [images, setImages] = useState([]);
   const [formData, setFormData] = useState({
     // Step 1: Service Details
     service: "",
     tattooSize: "",
     placement: "",
     description: "",
-    referenceImages: [],
+   
     
     // Step 2: Personal Info
     firstName: "",
@@ -53,7 +54,9 @@ function BookingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
-
+  useEffect(() => {
+    console.log(formData);
+  }, [formData]);
   const services = [
     { id: "custom", name: "Custom Tattoo", price: "From R1,500", icon: FaPaintBrush },
     { id: "fineLine", name: "Fine Line", price: "From R1,200", icon: FaPaintBrush },
@@ -113,23 +116,49 @@ function BookingPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+ async function postBooking() {
+  try {
+    setIsSubmitting(true)
+    const data = new FormData();
+
+    data.append("firstName", formData.firstName);
+    data.append("lastName", formData.lastName);
+    data.append("emailAddress", formData.email);
+    data.append("phoneNumber", formData.phone);
+    data.append("preferredDate", formData.preferredDate);
+    data.append("alternativeDate", formData.alternativeDate);
+    data.append("preferredTime", formData.preferredTime);
+    data.append("serviceType", formData.service);
+    data.append("tattoSize", formData.tattooSize);
+    data.append("tattoPlacement", formData.placement);
+    data.append("tattoDescription", formData.description);
+    data.append("additionalNotes", formData.notes);
+
+    images.forEach((img) => {
+      data.append("images", img);
+    });
+
+    const response = await fetch("http://localhost:1010/bookings", {
+      method: "POST",
+      body: data
+    });
+
+    const returnValue = await response.json();
+    setIsSubmitting(false)
+    if(!response.ok){
+
+    }
+    setShowSuccess(true)
+  } catch (error) {
+    console.error(error);
+  }
+}
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateStep()) return;
     
-    setIsSubmitting(true);
-    
-    // Simulate API call with image upload
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setShowSuccess(true);
-      
-      // Reset form after 3 seconds and redirect
-      setTimeout(() => {
-        setShowSuccess(false);
-        navigate("/");
-      }, 3000);
-    }, 2000);
+    postBooking();
+  
   };
 
   const handleChange = (e) => {
@@ -143,53 +172,29 @@ function BookingPage() {
     }
   };
 
-  const handleImageUpload = (e) => {
-    const files = Array.from(e.target.files);
-    
-    if (files.length + formData.referenceImages.length > 5) {
-      alert("You can only upload up to 5 images");
-      return;
-    }
-    
-    setUploadingImage(true);
-    
-    // Process each file
-    files.forEach(file => {
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const imageData = {
-            id: Date.now() + Math.random(),
-            name: file.name,
-            data: reader.result,
-            size: file.size,
-            type: file.type
-          };
-          setFormData(prev => ({
-            ...prev,
-            referenceImages: [...prev.referenceImages, imageData]
-          }));
-        };
-        reader.readAsDataURL(file);
-      } else {
-        alert("Please upload only image files (JPEG, PNG, GIF, etc.)");
-      }
-    });
-    
-    setUploadingImage(false);
-    // Clear the file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
+const handleImageUpload = (e) => {
+  const files = Array.from(e.target.files);
 
-  const removeImage = (imageId) => {
-    setFormData({
-      ...formData,
-      referenceImages: formData.referenceImages.filter(img => img.id !== imageId)
-    });
-  };
+  if (files.length + images.length > 5) {
+    alert("You can only upload up to 5 images");
+    return;
+  }
 
+  const validFiles = files.filter(file =>
+    file.type.startsWith("image/")
+  );
+
+  if (validFiles.length !== files.length) {
+    alert("Please upload only image files");
+  }
+
+  setImages(prev => [...prev, ...validFiles]);
+
+  e.target.value = "";
+};
+const removeImage = (index) => {
+  setImages(prev => prev.filter((_, i) => i !== index));
+};
   const getSelectedService = () => {
     return services.find(s => s.id === formData.service);
   };
@@ -292,11 +297,11 @@ function BookingPage() {
           </div>
         )}
 
-        {formData.referenceImages.length > 0 && (
+        {images.length > 0 && (
           <div className="image-preview-grid">
-            <h4>Uploaded Images ({formData.referenceImages.length}/5)</h4>
+            <h4>Uploaded Images ({images.length}/5)</h4>
             <div className="image-grid">
-              {formData.referenceImages.map((image) => (
+              {images.map((image) => (
                 <div key={image.id} className="image-preview-item">
                   <img src={image.data} alt={image.name} />
                   <button 
@@ -493,11 +498,11 @@ function BookingPage() {
           <span>{formData.phone}</span>
         </div>
 
-        {formData.referenceImages.length > 0 && (
+        {images.length > 0 && (
           <div className="summary-item summary-images">
             <strong>Reference Images:</strong>
             <div className="summary-image-grid">
-              {formData.referenceImages.map((image, idx) => (
+              {images.map((image, idx) => (
                 <img key={idx} src={image.data} alt={`Reference ${idx + 1}`} />
               ))}
             </div>
@@ -640,7 +645,7 @@ function BookingPage() {
             >
               <FaCheckCircle className="success-icon" />
               <h2>Booking Submitted!</h2>
-              <p>Thank you for choosing Ink By Nala. We'll contact you within 24-48 hours to confirm your appointment.</p>
+              <p>Thank you for choosing Pure Ink Co. We'll contact you within 24-48 hours to confirm your appointment.</p>
               <button onClick={() => navigate("/")} className="btn-primary">Back to Home</button>
             </motion.div>
           </motion.div>

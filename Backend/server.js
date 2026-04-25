@@ -4,17 +4,19 @@ import jwt from "jsonwebtoken"
 import pool from "./sql.js";
 import multer from "multer";
 import cors from "cors";
+import fs from "fs";
+import adminRoute from "./routes/adminRoute.js"
+import middleware from "./middleware/middleware.js"
 import cloudinary , {uploadImage} from "./cloudnary.js"
 const app = express();
-const PORT =1010
+const PORT = 1010
 
 
 app.use(cors({
   origin: "http://localhost:5173",
   credentials: true
 }));
-app.options("*", cors());
-
+app.options(/.*/, cors());
 app.use(express.json())
 
 app.post("/login", async(req,res)=>{
@@ -60,10 +62,12 @@ const upload = multer({ dest: 'uploads/' });
 
 app.post('/bookings', upload.array('images', 5), async (req, res) => {
 
+    
         const {
            firstName,lastName,emailAddress,phoneNumber,preferredDate,alternativeDate,preferredTime,serviceType,tattoSize,tattoPlacement,tattoDescription,additonalNotes,images
         } = req.body;
 
+       console.log(req.body) 
 
   try {
     
@@ -89,23 +93,23 @@ app.post('/bookings', upload.array('images', 5), async (req, res) => {
         }
             
     const [result] = await pool.query(
-      "INSERT INTO bookings(firstName,lastName,emailAddress,phoneNumber,preferredDate,alternativeDate,preferredDate,serviceType,tattoSize,tattoPlacement,tattoDescription,additionalNotes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+      "INSERT INTO bookings(firstName,lastName,emailAddress,phoneNumber,preferredDate,alternativeDate,preferredTime,serviceType,tattoSize,tattoPlacement,tattoDescription,additionalNotes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
       [firstName,lastName,emailAddress,phoneNumber,preferredDate,alternativeDate,preferredTime,serviceType,tattoSize,tattoPlacement,tattoDescription,additonalNotes]
     );
     // Save images in productImages table
     for (const image of imagePaths) {
         await pool.query(
-            "INSERT INTO images (bookingId, imgUrl) VALUES (?, ?)",
+            "INSERT INTO images (bookingId, imageUrl) VALUES (?, ?)",
             [result.insertId, image.url]
-        );
+    );
         }
 
 
-     
+    
     res.status(201).json({ message: "Booking  Successful", });
 
     } catch (error) {
-        
+        console.error(error)
         res.status(500).json({ message: "Internal Server error" });
     }
     finally {
@@ -122,8 +126,7 @@ app.post('/bookings', upload.array('images', 5), async (req, res) => {
 
 
 
-
-
+app.use("/admin",middleware, adminRoute)
 
 /*
 app.post("/register",async (req,res)=>{

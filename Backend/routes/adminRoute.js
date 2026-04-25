@@ -1,13 +1,13 @@
 import express from "express"
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
-import pool from "./sql.js";
+import pool from "../sql.js";
 
 
 const router = express.Router();
 
 
-router.get("getBookings",async (req,res)=>{
+router.get("/getBookings",async (req,res)=>{
 
     try {
         
@@ -44,7 +44,7 @@ router.get("getBookings",async (req,res)=>{
 })
 
 
-router.put("updateBookings", async (req,res)=>{
+router.put("/updateBookings", async (req,res)=>{
 
     const path = req.query;
     const {completed , adminConfirm , confirmDate , id } = req.body;
@@ -64,3 +64,5 @@ router.put("updateBookings", async (req,res)=>{
 
 
 })
+
+export default router
