@@ -46,20 +46,26 @@ router.get("/getBookings",async (req,res)=>{
 
 router.put("/updateBookings", async (req,res)=>{
 
-    const path = req.query;
-    const {completed , adminConfirm , confirmDate , id } = req.body;
+
+    const {bookingid, newStatus } = req.body;
 
 
-    if(completed==null || adminConfirm ==null || confirmDate==null){
-        return res.status(401).json({message:"Invalid Input"})
-    }
+    
 
     try {
         
-        const [row] = await pool.query("UPDATE users SET completed=?, adminConfirm =? , confirmDae")
+        const [result] = await pool.query("UPDATE bookings SET status=? WHERE id =?",[newStatus,bookingid])
+
+  
+        if( result.affectedRows==0){
+            return res.status(400).json({message:"Could not update the booking status"})
+        }
+
+        return res.status(200).json({message:"Booking status successfully updated"})
 
     } catch (error) {
-        
+        console.log(error)
+        return res.status(500).json({message:"Internal Server Error"})
     }
 
 

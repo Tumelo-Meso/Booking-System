@@ -103,16 +103,46 @@ function AdminDashboard() {
     navigate("/admin/login");
   };
 
-  const handleUpdateStatus = (bookingId, newStatus) => {
-    setBookings(prev => 
-      prev.map(booking => 
-        booking.id === bookingId 
-          ? { ...booking, status: newStatus }
-          : booking
-      )
-    );
-    setShowModal(false);
-  };
+
+  async function updateStatus(bookingId,newStatus){
+
+    let token = JSON.parse(localStorage.getItem("token"))|| null;
+
+  
+    if(!bookingId|| !newStatus || token == null){
+
+      return
+    }
+
+    try {
+      
+      const response = await fetch("http://localhost:1010/admin/updateBookings",{
+
+          method:"PUT",
+          headers:{
+              "Authorization":token,
+              "Content-Type":"application/json"
+          },
+
+          body:JSON.stringify({
+             bookingId,newStatus
+          })
+      })
+
+      const data = await response.json();
+
+      if(!response.ok) return alert("Could not update status")
+
+      alert("Status updated");  
+      
+      setShowModal(false);
+    } catch (error) {
+        console.error(error)
+      
+    }
+  }
+
+  
 
   const handleDeleteBooking = (bookingId) => {
     if (window.confirm("Are you sure you want to delete this booking?")) {
@@ -447,13 +477,13 @@ function AdminDashboard() {
 
               <div className="modal-actions">
                 <select 
-                  onChange={(e) => handleUpdateStatus(selectedBooking.bookingInfo.id, e.target.value)}
+                  onChange={(e) => updateStatus(selectedBooking.bookingInfo.id, e.target.value)}
                   defaultValue={selectedBooking.bookingInfo.status}
                 >
-                  <option value="pending">Pending</option>
-                  <option value="confirmed">Confirmed</option>
-                  <option value="completed">Completed</option>
-                  <option value="cancelled">Cancelled</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Confirmed">Confirmed</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Cancelled">Cancelled</option>
                 </select>
                 <button className="delete-modal-btn" onClick={() => handleDeleteBooking(selectedBooking.id)}>
                   Delete Booking

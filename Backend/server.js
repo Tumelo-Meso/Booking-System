@@ -8,8 +8,11 @@ import fs from "fs";
 import adminRoute from "./routes/adminRoute.js"
 import middleware from "./middleware/middleware.js"
 import cloudinary , {uploadImage} from "./cloudnary.js"
+
+import dotenv from "dotenv";
+dotenv.config();
 const app = express();
-const PORT = 1010
+const PORT = process.env.PORT|| 1010
 
 
 app.use(cors({
