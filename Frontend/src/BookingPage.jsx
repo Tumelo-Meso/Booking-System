@@ -42,7 +42,6 @@ function BookingPage() {
     // Step 3: Appointment Details
     preferredDate: "",
     preferredTime: "",
-    alternativeDate: "",
     notes: "",
     
     // Step 4: Confirmation
@@ -126,7 +125,6 @@ function BookingPage() {
     data.append("emailAddress", formData.email);
     data.append("phoneNumber", formData.phone);
     data.append("preferredDate", formData.preferredDate);
-    data.append("alternativeDate", formData.alternativeDate);
     data.append("preferredTime", formData.preferredTime);
     data.append("serviceType", formData.service);
     data.append("tattoSize", formData.tattooSize);
@@ -301,18 +299,18 @@ const removeImage = (index) => {
           <div className="image-preview-grid">
             <h4>Uploaded Images ({images.length}/5)</h4>
             <div className="image-grid">
-              {images.map((image) => (
-                <div key={image.id} className="image-preview-item">
-                  <img src={image.data} alt={image.name} />
-                  <button 
-                    type="button"
-                    className="remove-image"
-                    onClick={() => removeImage(image.id)}
-                  >
-                    <FaTrash />
-                  </button>
-                </div>
-              ))}
+             {images.map((image, index) => (
+  <div key={index} className="image-preview-item">
+    <img src={URL.createObjectURL(image)} alt={image.name} />
+    <button 
+      type="button"
+      className="remove-image"
+      onClick={() => removeImage(index)}
+    >
+      <FaTrash />
+    </button>
+  </div>
+))}
             </div>
           </div>
         )}
@@ -417,17 +415,7 @@ const removeImage = (index) => {
         </div>
       </div>
 
-      <div className="form-group">
-        <label>Alternative Date (Optional)</label>
-        <input
-          type="date"
-          name="alternativeDate"
-          value={formData.alternativeDate}
-          onChange={handleChange}
-          min={new Date().toISOString().split('T')[0]}
-        />
-      </div>
-
+    
       <div className="form-group">
         <label>Additional Notes</label>
         <textarea
@@ -503,8 +491,8 @@ const removeImage = (index) => {
             <strong>Reference Images:</strong>
             <div className="summary-image-grid">
               {images.map((image, idx) => (
-                <img key={idx} src={image.data} alt={`Reference ${idx + 1}`} />
-              ))}
+  <img key={idx} src={URL.createObjectURL(image)} alt={`Reference ${idx + 1}`} />
+))}
             </div>
           </div>
         )}
@@ -539,7 +527,7 @@ const removeImage = (index) => {
         <FaWhatsapp />
         <div>
           <strong>Prefer WhatsApp?</strong>
-          <p>Contact us directly on +27 12 065 0511 for quick booking</p>
+          <p>Contact us directly on +27 15 654 8889 for quick booking</p>
         </div>
       </div>
     </motion.div>

@@ -434,8 +434,13 @@
   padding: 30px;
   max-width: 600px;
   width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
+
+  /* IMPORTANT FIX */
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden; /* prevents whole modal scrolling */
   border: 1px solid rgba(255, 215, 0, 0.3);
 }
 
@@ -626,4 +631,277 @@
   .stat-info h3 {
     font-size: 24px;
   }
+}
+.client-images-section {
+  margin-top: 20px;
+}
+
+.client-images-section h4 {
+  color: var(--primary);
+  margin-bottom: 10px;
+}
+
+.client-images-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+}
+
+.client-image {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.client-image:hover {
+  transform: scale(1.05);
+}
+
+/* =======================
+   CREATE GALLERY MODAL
+======================= */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  padding: 20px;
+  backdrop-filter: blur(6px);
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 550px;
+  background: #1a1a1a;
+  border-radius: 15px;
+  padding: 25px;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  color: #fff;
+  animation: popIn 0.3s ease;
+}
+
+@keyframes popIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Title */
+.modal-content h3 {
+  font-size: 22px;
+  margin-bottom: 20px;
+  color: #ffd700;
+  text-align: center;
+}
+
+/* Form group */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  font-size: 13px;
+  margin-bottom: 6px;
+  color: #ccc;
+}
+
+/* Inputs */
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  background: rgba(0, 0, 0, 0.4);
+  color: white;
+  outline: none;
+  transition: 0.3s;
+}
+
+.form-group textarea {
+  min-height: 100px;
+  resize: none;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #ffd700;
+}
+
+
+/* Save button */
+.save-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background: #ffd700;
+  color: #000;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.save-btn:hover {
+  background: #e6c200;
+  transform: translateY(-2px);
+}
+
+/* Cancel button */
+.close-modal-btn {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid rgba(255, 0, 0, 0.4);
+  border-radius: 8px;
+  background: transparent;
+  color: #ff4d4d;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.close-modal-btn:hover {
+  background: rgba(255, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Upload input styling */
+input[type="file"] {
+  padding: 8px;
+  border: 1px dashed rgba(255, 215, 0, 0.3);
+  background: rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .modal-content {
+    max-width: 90%;
+    padding: 20px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+}
+
+/* REMOVE or scope this overly broad rule: */
+.modal-content img {
+  width: 100%;
+  border-radius: 10px;
+  margin-top: 10px;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+/* REPLACE with scoped rules: */
+.image-preview-container {
+  margin-top: 10px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  max-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.image-preview-img {
+  max-width: 100%;
+  max-height: 200px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 10px;
+}
+
+.client-image {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.client-image:hover {
+  transform: scale(1.05);
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.gallery-card {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  background: rgba(26, 26, 26, 0.8);
+  cursor: pointer;
+}
+
+.gallery-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  display: block;
+}
+
+/* Hidden by default, shown on hover */
+.gallery-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 200px;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;                      /* ← hidden by default */
+  transition: opacity 0.25s ease;
+}
+
+/* ← THIS is what was missing — show it on hover */
+.gallery-card:hover .gallery-overlay {
+  opacity: 1;
+}
+
+.gallery-info {
+  padding: 10px 12px;
+}
+
+.gallery-info p {
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: white;
+  font-weight: 500;
+}
+
+.gallery-info small {
+  font-size: 11px;
+  color: var(--text-gray);
+  text-transform: capitalize;
 }

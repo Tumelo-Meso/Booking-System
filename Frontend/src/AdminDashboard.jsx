@@ -19,12 +19,14 @@ import {
   FaTrash,
   FaDownload,
   FaFilter,
-  FaSearch
+  FaSearch,
+  FaUpload,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 function AdminDashboard() {
   const navigate = useNavigate();
+  const [gallery, setGallery] = useState([]);
   const [activeTab, setActiveTab] = useState("overview");
   const [bookings, setBookings] = useState([]);
   const [filteredBookings, setFilteredBookings] = useState([]);
@@ -33,6 +35,16 @@ function AdminDashboard() {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [adminData, setAdminData] = useState(null);
+  const [showGalleryModal, setShowGalleryModal] = useState(false);
+  const fileRef = React.useRef();
+
+const [galleryForm, setGalleryForm] = useState({
+  title: "",
+  category: "custom",
+  description: "",
+  image: null
+});
+const [preview, setPreview] = useState(null);
 
   // Sample booking data (In production, fetch from backend)
   useEffect(() => {
@@ -43,14 +55,14 @@ function AdminDashboard() {
       return;
     }
 
-
+      getGallery();
      getBookings()
   }, [navigate]);
 
 
   async function getBookings() {
     
-    let token = JSON.parse(localStorage.getItem("token"))||[];
+    let token = JSON.parse(localStorage.getItem("token"))|| null;
 
     if(!token) navigate("/admin/login")
 
@@ -70,6 +82,8 @@ function AdminDashboard() {
 
         return
       }
+
+      console.log(data)
       setBookings(data);
       setFilteredBookings(data); 
     } catch (error) {
@@ -77,6 +91,26 @@ function AdminDashboard() {
     }
 
   }
+
+  async function getGallery() {
+
+    try {
+
+      const response = await fetch("http://localhost:1010/getGallery",{
+
+        method:"GET",
+  
+      });
+
+      if(!response.ok) return alert("No images found")
+      const data = await response.json();
+      setGallery(data);
+
+
+    } catch (err) {
+      console.error(err);
+    }
+}
   // Filter bookings based on search and status
   useEffect(() => {
     let filtered = bookings;
@@ -89,8 +123,8 @@ function AdminDashboard() {
       filtered = filtered.filter(booking => 
         booking.bookingInfo.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||   
         booking.bookingInfo.lastName.toLowerCase().includes(searchTerm.toLowerCase())||
-        booking.bookingInfo.emailAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.bookingInfo.id.toLowerCase().includes(searchTerm.toLowerCase())
+        booking.bookingInfo.emailAddress.toLowerCase().includes(searchTerm.toLowerCase()) 
+       
       );
     }
     
@@ -102,7 +136,27 @@ function AdminDashboard() {
    
     navigate("/admin/login");
   };
+  const handleGalleryChange = (e) => {
+  const { name, value } = e.target;
 
+  setGalleryForm(prev => ({
+    ...prev,
+    [name]: value
+  }));
+};
+
+  const handleGalleryImage = (e) => {
+  const file = e.target.files[0];
+
+  if (!file) return;
+
+  setGalleryForm(prev => ({
+    ...prev,
+    image: file
+  }));
+
+  setPreview(URL.createObjectURL(file));
+};
 
   async function updateStatus(bookingId,newStatus){
 
@@ -111,7 +165,7 @@ function AdminDashboard() {
   
     if(!bookingId|| !newStatus || token == null){
 
-      return
+      return alert("Invalid request")
     }
 
     try {
@@ -131,17 +185,51 @@ function AdminDashboard() {
 
       const data = await response.json();
 
-      if(!response.ok) return alert("Could not update status")
+      if(!response.ok) return alert(data.message)
 
       alert("Status updated");  
       
       setShowModal(false);
+      getBookings();
     } catch (error) {
         console.error(error)
       
     }
   }
 
+  const createGalleryItem = async () => {
+  try {
+    const token = JSON.parse(localStorage.getItem("token"));
+
+    const data = new FormData();
+    data.append("title", galleryForm.title);
+    data.append("category", galleryForm.category);
+    data.append("description", galleryForm.description);
+    data.append("image", galleryForm.image);
+
+    const response = await fetch("http://localhost:1010/admin/createGallery", {
+      method: "POST",
+      headers: { Authorization: token },
+      body: data
+    });
+
+    const result = await response.json();
+    if (!response.ok) return alert(result.message);
+
+    alert("Gallery item created");
+
+    setShowGalleryModal(false);
+    setGalleryForm({ title: "", category: "custom", description: "", image: null });
+    setPreview(null);
+
+    // ← ADD THIS: clears the browser's cached file so the input fires onChange again
+    if (fileRef.current) fileRef.current.value = "";
+
+    getGallery();
+  } catch (err) {
+    console.error(err);
+  }
+};
   
 
   const handleDeleteBooking = (bookingId) => {
@@ -167,6 +255,8 @@ function AdminDashboard() {
   };
 
   
+  
+
     const stats = {
       totalBookings: bookings.length,
 
@@ -286,7 +376,7 @@ function AdminDashboard() {
             <FaSearch />
             <input
               type="text"
-              placeholder="Search by name, email or ID..."
+              placeholder="Search by name or email ..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -302,9 +392,7 @@ function AdminDashboard() {
             <option value="Completed">Completed</option>
             <option value="Cancelled">Cancelled</option>
           </select>
-          <button className="export-btn">
-            <FaDownload /> Export
-          </button>
+        
         </div>
       </div>
 
@@ -372,6 +460,50 @@ function AdminDashboard() {
     </motion.div>
   );
 
+  const renderGallery = () => (
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    className="bookings-management"
+  >
+    <div className="bookings-header">
+      <h3>Gallery Management (Admin)</h3>
+
+      <div className="filters">
+       <button
+  className="export-btn"
+  onClick={() => setShowGalleryModal(true)}
+>
+  <FaUpload /> Add Image
+</button>
+      </div>
+    </div>
+
+    <div className="gallery-grid">
+      {gallery.map((img) => (
+        <div key={img.id} className="gallery-card">
+          <img src={img.imageUrl} alt={img.title} />
+
+          <div className="gallery-overlay">
+            <button
+              className="action-btn delete-btn"
+              onClick={() => handleDeleteGallery(img.id)}
+            >
+              <FaTrash />
+            </button>
+          </div>
+
+          <div className="gallery-info">
+            <p>{img.title}</p>
+              <p>{img.description}</p>
+            <small>{img.category}</small>
+          </div>
+        </div>
+      ))}
+    </div>
+  </motion.div>
+);
+
   return (
     <div className="admin-dashboard">
       <nav className="admin-navbar">
@@ -401,8 +533,8 @@ function AdminDashboard() {
             <li className={activeTab === "bookings" ? "active" : ""} onClick={() => setActiveTab("bookings")}>
               <FaCalendarAlt /> Bookings
             </li>
-            <li className={activeTab === "customers" ? "active" : ""} onClick={() => setActiveTab("customers")}>
-              <FaUsers /> Customers
+            <li className={activeTab === "gallery" ? "active" : ""} onClick={() => setActiveTab("gallery")}>
+              <FaUsers /> Gallery Management
             </li>
           </ul>
         </aside>
@@ -410,7 +542,7 @@ function AdminDashboard() {
         <main className="main-content">
           {activeTab === "overview" && renderOverview()}
           {activeTab === "bookings" && renderBookings()}
-          {activeTab === "customers" && renderBookings()}
+          {activeTab === "gallery" && renderGallery()}
         </main>
       </div>
 
@@ -465,15 +597,47 @@ function AdminDashboard() {
                   <strong>Description:</strong>
                   <span>{selectedBooking.bookingInfo.tattoDescription}</span>
                 </div>
+
+
                 <div className="detail-row">
                   <strong>Preferred Date:</strong>
                   <span>{selectedBooking.bookingInfo.preferredDate} at {selectedBooking.bookingInfo.preferredTime}</span>
                 </div>
+
+        
+
+                <div className="detail-row">
+                  <strong>Addditonal Notes:</strong>
+                  <span>{selectedBooking.bookingInfo.additionalNotes ==null ? "" : selectedBooking.bookingInfo.additionalNotes } </span>
+                </div>
+                
+
+                
+             
+
+
+          
                 <div className="detail-row">
                   <strong>Status:</strong>
-                  <span>{getStatusBadge(selectedBooking.bookingInfo.status)}</span>
+                  <span id="statusView">{getStatusBadge(selectedBooking.bookingInfo.status)}</span>
                 </div>
               </div>
+
+                                
+        <div className="client-images-section">
+          <h4>Client Uploaded Images</h4>
+
+          <div className="client-images-grid">
+            {selectedBooking.row2.map((img, index) => (
+              <img
+                key={index}
+                src={img.imageUrl}  
+                alt="client upload"
+                className="client-image"
+              />
+            ))}
+          </div>
+        </div>
 
               <div className="modal-actions">
                 <select 
@@ -495,7 +659,106 @@ function AdminDashboard() {
             </motion.div>
           </motion.div>
         )}
+
+
       </AnimatePresence>
+
+      <AnimatePresence>
+  {showGalleryModal && (
+    <motion.div
+      className="modal-overlay"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={() => setShowGalleryModal(false)}
+    >
+      <motion.div
+        className="modal-content"
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.8, opacity: 0 }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3>Add Gallery Image</h3>
+
+        <div className="form-group">
+          <label>Title</label>
+          <input
+            name="title"
+            value={galleryForm.title}
+            onChange={handleGalleryChange}
+            placeholder="Enter title"
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Category</label>
+          <select
+            name="category"
+            value={galleryForm.category}
+            onChange={handleGalleryChange}
+          >
+            <option value="custom">Custom</option>
+            <option value="fineLine">Fine Line</option>
+            <option value="realism">Realism</option>
+            <option value="sleeve">Sleeve</option>
+            <option value="coverup">Cover-up</option>
+            <option value="watercolor">Watercolor</option>
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label>Description</label>
+          <textarea
+            name="description"
+            value={galleryForm.description}
+            onChange={handleGalleryChange}
+            placeholder="Enter description"
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Image</label>
+          <input
+  type="file"
+  ref={fileRef}
+  onChange={handleGalleryImage}
+/>
+        </div>
+
+        {preview && (
+  <div className="image-preview-container">
+    <img
+      src={preview}
+      alt="preview"
+      className="image-preview-img"
+    />
+  </div>
+)}
+
+        <div className="modal-actions">
+          <button className="save-btn" onClick={createGalleryItem}>
+            Save
+          </button>
+          <button
+            className="close-modal-btn"
+            onClick={() => {setShowGalleryModal(false)
+
+
+              setPreview(null);
+    setGalleryForm({ title: "", category: "custom", description: "", image: null });
+    if (fileRef.current) fileRef.current.value = ""; // ← ADD THIS
+            }
+              
+            }
+          >
+            Cancel
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
     </div>
   );
 }

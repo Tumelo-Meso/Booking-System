@@ -8,7 +8,7 @@ import fs from "fs";
 import adminRoute from "./routes/adminRoute.js"
 import middleware from "./middleware/middleware.js"
 import cloudinary , {uploadImage} from "./cloudnary.js"
-
+import { sendBookingConfirmation } from "./email.js";
 import dotenv from "dotenv";
 dotenv.config();
 const app = express();
@@ -67,7 +67,7 @@ app.post('/bookings', upload.array('images', 5), async (req, res) => {
 
     
         const {
-           firstName,lastName,emailAddress,phoneNumber,preferredDate,alternativeDate,preferredTime,serviceType,tattoSize,tattoPlacement,tattoDescription,additonalNotes,images
+           firstName,lastName,emailAddress,phoneNumber,preferredDate,preferredTime,serviceType,tattoSize,tattoPlacement,tattoDescription,additonalNotes,images
         } = req.body;
 
        console.log(req.body) 
@@ -96,8 +96,8 @@ app.post('/bookings', upload.array('images', 5), async (req, res) => {
         }
             
     const [result] = await pool.query(
-      "INSERT INTO bookings(firstName,lastName,emailAddress,phoneNumber,preferredDate,alternativeDate,preferredTime,serviceType,tattoSize,tattoPlacement,tattoDescription,additionalNotes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-      [firstName,lastName,emailAddress,phoneNumber,preferredDate,alternativeDate,preferredTime,serviceType,tattoSize,tattoPlacement,tattoDescription,additonalNotes]
+      "INSERT INTO bookings(firstName,lastName,emailAddress,phoneNumber,preferredDate,preferredTime,serviceType,tattoSize,tattoPlacement,tattoDescription,additionalNotes) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+      [firstName,lastName,emailAddress,phoneNumber,preferredDate,preferredTime,serviceType,tattoSize,tattoPlacement,tattoDescription,additonalNotes]
     );
     // Save images in productImages table
     for (const image of imagePaths) {
@@ -107,8 +107,9 @@ app.post('/bookings', upload.array('images', 5), async (req, res) => {
     );
         }
 
-
     
+    
+    sendBookingConfirmation(req.body.emailAddress, req.body);
     res.status(201).json({ message: "Booking  Successful", });
 
     } catch (error) {
@@ -127,6 +128,29 @@ app.post('/bookings', upload.array('images', 5), async (req, res) => {
     }
 });
 
+
+app.get("/getGallery",async (req,res)=>{
+
+    try {
+        
+        const [row] = await pool.query("SELECT * FROM gallery");
+
+        
+        if(row.length==0){
+            return res.status(400).json({message:"No images found"})
+        }
+
+
+        return res.status(200).json(row)
+
+    } catch (error) {
+        
+        console.error(error);
+
+        return res.status(500).json({message:"Internal Server Error"})
+    }
+
+})
 
 
 app.use("/admin",middleware, adminRoute)

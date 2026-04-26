@@ -72,7 +72,9 @@ function AdminLogin() {
         const returnValue = await response.json();
 
         if(!response.ok) {
-          return  setData(returnValue.message)
+          setData(returnValue.message)
+          alert(returnValue.message)
+          return
         }
 
         const token = returnValue.token;

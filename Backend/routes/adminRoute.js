@@ -2,8 +2,9 @@ import express from "express"
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
 import pool from "../sql.js";
-
-
+import multer from "multer";
+import cloudinary , {uploadImage} from "../cloudnary.js"
+import fs from "fs";
 const router = express.Router();
 
 
@@ -32,6 +33,8 @@ router.get("/getBookings",async (req,res)=>{
         }
 
 
+        
+
         return res.status(200).json(bookings)
 
     } catch (error) {
@@ -44,31 +47,69 @@ router.get("/getBookings",async (req,res)=>{
 })
 
 
+
 router.put("/updateBookings", async (req,res)=>{
 
 
-    const {bookingid, newStatus } = req.body;
-
+    const {bookingId, newStatus } = req.body;
 
     
 
     try {
         
-        const [result] = await pool.query("UPDATE bookings SET status=? WHERE id =?",[newStatus,bookingid])
+        const [result] = await pool.query("UPDATE bookings SET status=? WHERE id =?",[newStatus,bookingId])
 
-  
-        if( result.affectedRows==0){
+        
+        if( result.affectedRows===0){
             return res.status(400).json({message:"Could not update the booking status"})
         }
 
         return res.status(200).json({message:"Booking status successfully updated"})
 
     } catch (error) {
-        console.log(error)
+    
         return res.status(500).json({message:"Internal Server Error"})
     }
 
 
 })
+
+const upload = multer({ dest: 'uploads/' }); 
+
+
+router.post('/createGallery', upload.single('image'), async (req, res) => {
+  const { title, category, description } = req.body;
+
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No image uploaded" });
+    }
+
+    // Upload to Cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "gallery"
+    });
+
+    // Remove temp file
+    fs.unlinkSync(req.file.path);
+
+    const imageUrl = result.secure_url;
+
+    // Save to DB
+    const [dbResult] = await pool.query(
+      "INSERT INTO gallery (title, category, description, imageUrl) VALUES (?,?,?,?)",
+      [title, category, description, imageUrl]
+    );
+
+    return res.status(201).json({
+      message: "Image uploaded successfully",
+      
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
 
 export default router
