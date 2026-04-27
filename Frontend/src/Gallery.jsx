@@ -38,11 +38,11 @@ function Gallery() {
         
       });
 
-      if(!response.ok) return alert("No images found")
+      if(!response.ok) return       setLoading(false)
       const data = await response.json();
       setGalleryItems(data);
       setFilteredItems(data);
-      setLoading(false)
+
 
 
     } catch (err) {
@@ -129,7 +129,7 @@ function Gallery() {
           
 
             <div className="category-filters">
-              {categories.map(category => (
+              {galleryItems.length!=0?categories.map(category => (
                 <button
                   key={category.id}
                   className={`filter-btn ${selectedCategory === category.id ? "active" : ""}`}
@@ -139,7 +139,10 @@ function Gallery() {
                   <span>{category.name}</span>
                   <span className="category-count">{category.count}</span>
                 </button>
-              ))}
+              ))
+            
+              : "No images found"
+            }
             </div>
           </div>
 

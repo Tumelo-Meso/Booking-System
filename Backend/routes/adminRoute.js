@@ -5,6 +5,7 @@ import pool from "../sql.js";
 import multer from "multer";
 import cloudinary , {uploadImage} from "../cloudnary.js"
 import fs from "fs";
+import { sendStatusChange } from "../email.js";
 const router = express.Router();
 
 
@@ -64,6 +65,10 @@ router.put("/updateBookings", async (req,res)=>{
             return res.status(400).json({message:"Could not update the booking status"})
         }
 
+        const [row] = await pool.query("SELECT * FROM bookings WHERE id = ?", [bookingId]);
+
+        sendStatusChange(row[0].emailAddress,row[0])
+
         return res.status(200).json({message:"Booking status successfully updated"})
 
     } catch (error) {
@@ -73,6 +78,27 @@ router.put("/updateBookings", async (req,res)=>{
 
 
 })
+
+
+router.delete("/deleteBooking/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const [result] = await pool.query(
+      "DELETE FROM bookings WHERE id = ? AND status =?",
+      [id,"Cancelled"]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Only cancelled bookings can be deleted" });
+    }
+
+    res.status(200).json({ message: "Booking deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 
 const upload = multer({ dest: 'uploads/' }); 
 
@@ -112,4 +138,24 @@ router.post('/createGallery', upload.single('image'), async (req, res) => {
   }
 });
 
+
+router.delete("/deleteGallery/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const [result] = await pool.query(
+      "DELETE FROM gallery WHERE id = ?",
+      [id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Image not found" });
+    }
+
+    res.status(200).json({ message: "Gallery image deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 export default router

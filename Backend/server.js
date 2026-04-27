@@ -152,9 +152,6 @@ app.get("/getGallery",async (req,res)=>{
 
 })
 
-
-app.use("/admin",middleware, adminRoute)
-
 /*
 app.post("/register",async (req,res)=>{
 
@@ -171,8 +168,15 @@ app.post("/register",async (req,res)=>{
         res.status(500)
     }
 
-}
+})
 */
+
+app.use("/admin",middleware, adminRoute)
+
+
+
+
+
 app.listen(PORT,()=>{
 
     console.log(`Server started at ${PORT}`)

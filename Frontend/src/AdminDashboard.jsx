@@ -25,6 +25,8 @@ import {
 import { useNavigate } from "react-router-dom";
 
 function AdminDashboard() {
+  const [previewZoom, setPreviewZoom] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
   const navigate = useNavigate();
   const [gallery, setGallery] = useState([]);
   const [activeTab, setActiveTab] = useState("overview");
@@ -59,6 +61,15 @@ const [preview, setPreview] = useState(null);
      getBookings()
   }, [navigate]);
 
+
+  const handleDownloadImage = (url) => {
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "client-image.jpg"; // default name
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
 
   async function getBookings() {
     
@@ -102,7 +113,7 @@ const [preview, setPreview] = useState(null);
   
       });
 
-      if(!response.ok) return alert("No images found")
+      if(!response.ok) return setGallery(null)
       const data = await response.json();
       setGallery(data);
 
@@ -232,11 +243,35 @@ const [preview, setPreview] = useState(null);
 };
   
 
-  const handleDeleteBooking = (bookingId) => {
-    if (window.confirm("Are you sure you want to delete this booking?")) {
-      setBookings(prev => prev.filter(booking => booking.id !== bookingId));
-      setShowModal(false);
-    }
+  const handleDeleteBooking = async(id) => {
+    
+
+      
+       let token = JSON.parse(localStorage.getItem("token")) || null
+
+       if( token == null){
+          return navigate("/admin/login")
+       }
+       try {
+          const response = await fetch(`http://localhost:1010/admin/deleteBooking/${id}`, {
+          method: "DELETE",
+          headers: { Authorization: token },
+
+        });
+
+          const data = await response.json();
+
+          if(!response.ok) return alert(data.message);
+
+          alert(data.message)
+
+          getBookings();
+
+
+       } catch (error) {
+          console.error(error)
+        
+       }
   };  
 
   const getStatusBadge = (status) => {
@@ -254,24 +289,57 @@ const [preview, setPreview] = useState(null);
     }
   };
 
+  const handleDeleteGallery = async(id)=>{
+
+       let token = JSON.parse(localStorage.getItem("token")) || null
+
+       if( token == null){
+          return navigate("/admin/login")
+       }
+       try {
+          const response = await fetch(`http://localhost:1010/admin/deleteGallery/${id}`, {
+          method: "DELETE",
+          headers: { Authorization: token },
+
+        });
+
+          const data = await response.json();
+
+          if(!response.ok) return alert(data.message);
+
+          alert(data.message)
+
+          getGallery();
+
+       } catch (error) {
+          console.error(error)
+        
+       }
+  }
   
-  
+
 
     const stats = {
       totalBookings: bookings.length,
 
-      pendingBookings: bookings.filter(
+      pendingBookings: bookings.length!=0? bookings.filter(
         b => b.bookingInfo?.status === "Pending"
-      ).length,
+      ).length:0,
 
-      confirmedBookings: bookings.filter(
+      confirmedBookings:bookings.length!=0? bookings.filter(
         b => b.bookingInfo?.status === "Confirmed"
-      ).length,
+      ).length:0,
 
-      completedBookings: bookings.filter(
+      completedBookings:bookings.length!=0? bookings.filter(
         b => b.bookingInfo?.status === "Completed"
-      ).length
+      ).length:0
     };
+  
+  
+
+
+  
+
 
   const renderOverview = () => (
     <motion.div
@@ -336,7 +404,9 @@ const [preview, setPreview] = useState(null);
               </tr>
             </thead>
             <tbody>
-              {filteredBookings.slice(0, 5).map(booking => (
+
+
+              {filteredBookings.length !=0?filteredBookings.slice(0, 5).map(booking => (
                 <tr key={booking.bookingInfo.id}>
                   <td>{booking.bookingInfo.id}</td>
                   <td>{booking.bookingInfo.firstName}  { booking.bookingInfo.lastName}</td>
@@ -355,7 +425,7 @@ const [preview, setPreview] = useState(null);
                     </button>
                   </td>
                 </tr>
-              ))}
+              )):"No bookings found"}
             </tbody>
           </table>
         </div>
@@ -412,7 +482,7 @@ const [preview, setPreview] = useState(null);
             </tr>
           </thead>
           <tbody>
-            {filteredBookings.map(booking => (
+            { filteredBookings!=0 ?filteredBookings.map(booking => (
               <tr key={booking.bookingInfo.id}>
                 <td>{booking.bookingInfo.id}</td>
                 <td>{booking.bookingInfo.firstName}  {booking.bookingInfo.lastName}</td>
@@ -453,7 +523,7 @@ const [preview, setPreview] = useState(null);
                   </div>
                 </td>
               </tr>
-            ))}
+            )):"No bookings found"}
           </tbody>
         </table>
       </div>
@@ -467,7 +537,7 @@ const [preview, setPreview] = useState(null);
     className="bookings-management"
   >
     <div className="bookings-header">
-      <h3>Gallery Management (Admin)</h3>
+      <h3>Gallery Management </h3>
 
       <div className="filters">
        <button
@@ -480,7 +550,11 @@ const [preview, setPreview] = useState(null);
     </div>
 
     <div className="gallery-grid">
-      {gallery.map((img) => (
+
+      {gallery !==null ? 
+      
+    
+           gallery.map((img) => (
         <div key={img.id} className="gallery-card">
           <img src={img.imageUrl} alt={img.title} />
 
@@ -499,7 +573,12 @@ const [preview, setPreview] = useState(null);
             <small>{img.category}</small>
           </div>
         </div>
-      ))}
+      ))
+
+      : "No images found"
+    }
+
+   
     </div>
   </motion.div>
 );
@@ -546,8 +625,32 @@ const [preview, setPreview] = useState(null);
         </main>
       </div>
 
+          <AnimatePresence>
+  {selectedImage && (
+    <motion.div
+      className="image-overlay"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={() => setSelectedImage(null)}
+    >
+      <motion.img
+        src={selectedImage}
+        alt="zoomed"
+        className="zoomed-image"
+        initial={{ scale: 0.8 }}
+        animate={{ scale: 1 }}
+        exit={{ scale: 0.8 }}
+      />
+    </motion.div>
+  )}
+</AnimatePresence>
+
       {/* Booking Details Modal */}
       <AnimatePresence>
+
+
+
         {showModal && selectedBooking && (
           <motion.div 
             className="modal-overlay"
@@ -613,13 +716,14 @@ const [preview, setPreview] = useState(null);
                 
 
                 
-             
-
-
+          
           
                 <div className="detail-row">
                   <strong>Status:</strong>
-                  <span id="statusView">{getStatusBadge(selectedBooking.bookingInfo.status)}</span>
+                  <span id="statusView">
+
+                    {selectedBooking.bookingInfo.status}
+                  </span>
                 </div>
               </div>
 
@@ -630,11 +734,12 @@ const [preview, setPreview] = useState(null);
           <div className="client-images-grid">
             {selectedBooking.row2.map((img, index) => (
               <img
-                key={index}
-                src={img.imageUrl}  
-                alt="client upload"
-                className="client-image"
-              />
+  key={index}
+  src={img.imageUrl}  
+  alt="client upload"
+  className="client-image"
+  onClick={() => setSelectedImage(img.imageUrl)}
+/>
             ))}
           </div>
         </div>
@@ -649,7 +754,7 @@ const [preview, setPreview] = useState(null);
                   <option value="Completed">Completed</option>
                   <option value="Cancelled">Cancelled</option>
                 </select>
-                <button className="delete-modal-btn" onClick={() => handleDeleteBooking(selectedBooking.id)}>
+                <button className="delete-modal-btn" onClick={() => handleDeleteBooking(selectedBooking.bookingInfo.id)}>
                   Delete Booking
                 </button>
                 <button className="close-modal-btn" onClick={() => setShowModal(false)}>
@@ -663,6 +768,26 @@ const [preview, setPreview] = useState(null);
 
       </AnimatePresence>
 
+        <AnimatePresence>
+  {previewZoom && preview && (
+    <motion.div
+      className="image-overlay"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={() => setPreviewZoom(false)}
+    >
+      <motion.img
+        src={preview}
+        alt="zoomed preview"
+        className="zoomed-image"
+        initial={{ scale: 0.8 }}
+        animate={{ scale: 1 }}
+        exit={{ scale: 0.8 }}
+      />
+    </motion.div>
+  )}
+</AnimatePresence>
       <AnimatePresence>
   {showGalleryModal && (
     <motion.div
@@ -726,12 +851,13 @@ const [preview, setPreview] = useState(null);
 />
         </div>
 
-        {preview && (
+       {preview && (
   <div className="image-preview-container">
     <img
       src={preview}
       alt="preview"
       className="image-preview-img"
+      onClick={() => setPreviewZoom(true)}
     />
   </div>
 )}

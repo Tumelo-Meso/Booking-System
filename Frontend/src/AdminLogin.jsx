@@ -56,7 +56,7 @@ function AdminLogin() {
       try {
         
         if(!email || !password){
-           return
+           return alert("Invalid creditinals")
         }
 
         const response = await fetch("http://localhost:1010/login",{
